@@ -1,0 +1,53 @@
+---
+import '@fontsource/eb-garamond/400.css'
+import '@fontsource/eb-garamond/400-italic.css'
+import '@fontsource/eb-garamond/600.css'
+import '../styles/global.css'
+import {href, type Settings} from '../lib/sanity'
+
+interface Props {
+  title?: string
+  description?: string
+  active?: 'work' | 'contact' | 'bio'
+  settings: Settings
+  image?: string
+}
+const {title, description, active, settings, image} = Astro.props
+const name = settings.name || 'Julien Monges'
+const pageTitle = title ? `${title} — ${name}` : name
+const desc = description || settings.description || `${name}, monteur et réalisateur.`
+const year = new Date().getFullYear()
+---
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={desc} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={desc} />
+    {image && <meta property="og:image" content={image} />}
+    <link rel="icon" href={href('/favicon.svg')} type="image/svg+xml" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="header wrap">
+        <a href={href('/bio')} class:list={['lnk', {'is-active': active === 'bio'}]}>{name}</a>
+        <nav class="nav" aria-label="Navigation principale">
+          <a href={href('/')} class:list={['lnk', {'is-active': active === 'work'}]}>Work</a>
+          <a href={href('/contact')} class:list={['lnk', {'is-active': active === 'contact'}]}>Contact</a>
+        </nav>
+      </header>
+
+      <main class="main">
+        <slot />
+      </main>
+
+      <footer class="footer wrap">
+        <span>{[settings.location, settings.coordinates].filter(Boolean).join(' — ')}</span>
+        <span>© {year} {name}</span>
+      </footer>
+    </div>
+  </body>
+</html>

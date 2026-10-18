@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro'
+import {getSettings} from '../lib/sanity'
+
+const settings = await getSettings()
+const tel = settings.phone?.replace(/[^\d+]/g, '')
+const handle = settings.instagramHandle?.replace(/^@?/, '@')
+const insta =
+  settings.instagramUrl || (handle ? `https://www.instagram.com/${handle.slice(1)}/` : undefined)
+---
+<Base title="Contact" active="contact" settings={settings}>
+  <div class="wrap contact">
+    {settings.email && <a class="lnk" href={`mailto:${settings.email}`}>{settings.email}</a>}
+    {settings.phone && <a class="lnk" href={`tel:${tel}`}>{settings.phone}</a>}
+    {handle && insta && (
+      <a class="lnk" href={insta} target="_blank" rel="noopener">{handle}</a>
+    )}
+  </div>
+</Base>

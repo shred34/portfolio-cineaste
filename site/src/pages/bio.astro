@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro'
+import {getSettings, imageUrl, srcSet} from '../lib/sanity'
+
+const settings = await getSettings()
+const infos = settings.bioInfos ?? []
+---
+<Base title="Bio" active="bio" settings={settings}>
+  <div class="wrap bio">
+    {settings.portrait ? (
+      <img
+        class="bio__portrait"
+        src={imageUrl(settings.portrait, 600, 612)}
+        srcset={srcSet(settings.portrait, 1 / 1.02, [300, 600, 900])}
+        sizes="(max-width: 640px) 60vw, 300px"
+        alt={settings.name}
+      />
+    ) : <div></div>}
+
+    {settings.bio && <p class="bio__text">{settings.bio}</p>}
+
+    <div class="bio__infos">
+      {infos.map((b) => (
+        <div>
+          <span class="label">{b.label}</span>
+          {(b.lines ?? []).map((line, i) => (
+            <p class:list={{it: b.italicSecondLine && i === 1}}>{line}</p>
+          ))}
+        </div>
+      ))}
+      {settings.cvUrl && (
+        <div>
+          <a class="lnk" href={`${settings.cvUrl}?dl=`} target="_blank" rel="noopener">CV</a>
+        </div>
+      )}
+    </div>
+  </div>
+</Base>

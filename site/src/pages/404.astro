@@ -1,0 +1,11 @@
+---
+import Base from '../layouts/Base.astro'
+import {getSettings, href} from '../lib/sanity'
+const settings = await getSettings()
+---
+<Base title="Page introuvable" settings={settings}>
+  <div class="wrap contact">
+    <p>Cette page n’existe pas.</p>
+    <a class="lnk" href={href('/')}>Voir les projets</a>
+  </div>
+</Base>

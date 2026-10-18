@@ -1,0 +1,16 @@
+# dépendances et fichiers générés
+node_modules/
+dist/
+.astro/
+.sanity/
+*.log
+
+# macOS
+.DS_Store
+
+# variables locales
+.env
+.env.*
+
+# ancien dépôt git du Studio (mis de côté)
+_ancien-git-studio/

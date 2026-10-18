@@ -1,0 +1,128 @@
+---
+import Base from '../../layouts/Base.astro'
+import {getFilms, getSettings, imageUrl, srcSet, filmMeta, youtubeId, href, type Film} from '../../lib/sanity'
+
+export async function getStaticPaths() {
+  const films = await getFilms()
+  return films.map((film) => ({params: {slug: film.slug}, props: {film}}))
+}
+
+const {film} = Astro.props as {film: Film}
+const settings = await getSettings()
+const ytId = youtubeId(film.youtubeUrl)
+const poster = film.videoPoster || film.coverImage
+const R = 2.39
+const share = imageUrl(film.coverImage, 1200, 630)
+---
+<Base title={film.title} description={film.synopsis} active="work" settings={settings} image={share}>
+  <article class="wrap film">
+    <header class="film__head">
+      <h1 class="film__title">{film.title}</h1>
+      <span class="film__meta">{filmMeta(film)}</span>
+    </header>
+
+    {ytId ? (
+      <div class="player" data-yt={ytId} data-title={film.title}>
+        <button type="button" class="player__poster" aria-label={`Lire ${film.title}`}>
+          {poster && (
+            <img
+              src={imageUrl(poster, 1600, 900)}
+              srcset={srcSet(poster, 16 / 9, [800, 1200, 1600, 2400])}
+              sizes="(max-width: 1728px) 86vw, 1488px"
+              alt=""
+              fetchpriority="high"
+            />
+          )}
+          <span class="player__label">Lecture</span>
+          {film.duration && <span class="player__dur">{film.duration}</span>}
+        </button>
+      </div>
+    ) : poster ? (
+      <div class="player player--still">
+        <img
+          class="player__poster"
+          src={imageUrl(poster, 1600, 900)}
+          srcset={srcSet(poster, 16 / 9, [800, 1200, 1600, 2400])}
+          sizes="(max-width: 1728px) 86vw, 1488px"
+          alt=""
+          style="object-fit: cover"
+        />
+      </div>
+    ) : null}
+
+    <div class="film__info">
+      {film.synopsis && (
+        <div class="film__syn">
+          <span class="label">Synopsis</span>
+          <p>{film.synopsis}</p>
+        </div>
+      )}
+      <div class="film__cred">
+        {film.directors && (
+          <>
+            <span class="label">Réalisation</span>
+            <p>{film.directors}</p>
+          </>
+        )}
+        {film.role && <p class="it">{film.role}</p>}
+        {film.production && (
+          <>
+            <div class="gap"></div>
+            <span class="label">Production</span>
+            <p>{film.production}</p>
+          </>
+        )}
+      </div>
+      {film.selections && film.selections.length > 0 && (
+        <div class="film__sel">
+          <span class="label">Sélections</span>
+          <ul>{film.selections.map((s) => <li>{s}</li>)}</ul>
+        </div>
+      )}
+    </div>
+
+    {film.stills && film.stills.length > 0 && (
+      <div class="stills">
+        {film.stills.map((img) => (
+          <img
+            src={imageUrl(img, 900, Math.round(900 / R))}
+            srcset={srcSet(img, R, [480, 800, 1200])}
+            sizes="(max-width: 640px) 92vw, 29vw"
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
+        ))}
+      </div>
+    )}
+
+    <div class="more">
+      <a class="lnk" href={href('/')}>Voir les autres projets</a>
+    </div>
+  </article>
+</Base>
+
+<script>
+  // Lecteur YouTube épuré : l'image du film s'affiche, et la vidéo YouTube
+  // (version « nocookie », sans suggestions) ne se charge qu'au clic.
+  document.querySelectorAll<HTMLElement>('.player[data-yt]').forEach((player) => {
+    const btn = player.querySelector('button')
+    btn?.addEventListener('click', () => {
+      const id = player.dataset.yt
+      const params = new URLSearchParams({
+        autoplay: '1',
+        rel: '0',
+        modestbranding: '1',
+        playsinline: '1',
+        iv_load_policy: '3',
+        color: 'white',
+      })
+      const iframe = document.createElement('iframe')
+      iframe.src = `https://www.youtube-nocookie.com/embed/${id}?${params}`
+      iframe.title = player.dataset.title || 'Vidéo'
+      iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'
+      iframe.allowFullscreen = true
+      player.replaceChildren(iframe)
+    })
+  })
+</script>

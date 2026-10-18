@@ -1,0 +1,134 @@
+---
+import Base from '../layouts/Base.astro'
+import {getFilms, getSettings, imageUrl, srcSet, filmMeta, href} from '../lib/sanity'
+
+const [films, settings] = await Promise.all([getFilms(), getSettings()])
+
+// 6 films par « page » ; au-delà, des flèches permettent de naviguer horizontalement.
+const PER_PAGE = 6
+const pages: (typeof films)[] = []
+for (let i = 0; i < films.length; i += PER_PAGE) pages.push(films.slice(i, i + PER_PAGE))
+const R = 2.39
+---
+<Base active="work" settings={settings}>
+  <div class="wrap home" data-view="apercu">
+    <div class="toolbar">
+      <div class="arrows" hidden={pages.length < 2} aria-label="Navigation des films">
+        <button type="button" data-prev aria-label="Films précédents" disabled>←</button>
+        <button type="button" data-next aria-label="Films suivants">→</button>
+        <span class="arrows__count" data-count>1 / {pages.length}</span>
+      </div>
+      <div class="toolbar__views" role="tablist">
+        <button type="button" class="lnk is-active" data-set-view="apercu" role="tab">Aperçu</button>
+        <button type="button" class="lnk" data-set-view="index" role="tab">Index</button>
+      </div>
+    </div>
+
+    <section class="view-apercu" aria-label="Aperçu des films">
+      <div class="pager" data-pager>
+        {pages.map((group) => (
+          <div class="pager__page">
+            {group.map((f, i) => (
+              <a class="card" href={href(`/films/${f.slug}`)}>
+                <figure class="card__img">
+                  {f.coverImage && (
+                    <img
+                      src={imageUrl(f.coverImage, 1000, Math.round(1000 / R))}
+                      srcset={srcSet(f.coverImage, R)}
+                      sizes="(max-width: 640px) 92vw, (max-width: 1000px) 46vw, 29vw"
+                      alt=""
+                      loading={i < 3 ? 'eager' : 'lazy'}
+                      decoding="async"
+                    />
+                  )}
+                  <span class="card__info">{filmMeta(f, false)}</span>
+                </figure>
+                <div class="card__cap">
+                  <span class="lnk">{f.title}</span>
+                  {f.year && <span class="year">{f.year}</span>}
+                </div>
+              </a>
+            ))}
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="view-index" aria-label="Index des films">
+      <ul class="list">
+        {films.map((f) => (
+          <li>
+            <a class="row" href={href(`/films/${f.slug}`)}>
+              <span class="row__title">
+                <span class="lnk">{f.title}</span>
+                {f.year && <span class="row__year">{f.year}</span>}
+              </span>
+              <span class="row__meta">{filmMeta(f, false)}</span>
+              {f.coverImage && (
+                <img class="row__thumb" src={imageUrl(f.coverImage, 240, Math.round(240 / R))} alt="" loading="lazy" />
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    {films.length === 0 && (
+      <p class="grey">Aucun film pour l’instant. Ajoute un film dans Sanity.</p>
+    )}
+  </div>
+</Base>
+
+<script>
+  const home = document.querySelector<HTMLElement>('.home')
+  if (home) {
+    // ——— Aperçu / Index (instantané, mémorisé dans l'adresse avec #index) ———
+    const buttons = home.querySelectorAll<HTMLButtonElement>('[data-set-view]')
+    const arrows = home.querySelector<HTMLElement>('.arrows')
+    const multi = arrows ? !arrows.hasAttribute('hidden') : false
+    const setView = (view: string, push = true) => {
+      home.dataset.view = view
+      buttons.forEach((b) => b.classList.toggle('is-active', b.dataset.setView === view))
+      if (arrows && multi) arrows.hidden = view !== 'apercu'
+      if (push) history.replaceState(null, '', view === 'index' ? '#index' : location.pathname)
+    }
+    buttons.forEach((b) => b.addEventListener('click', () => setView(b.dataset.setView!)))
+    if (location.hash === '#index') setView('index', false)
+
+    // ——— Flèches (seulement s'il y a plus de 6 films) ———
+    const pager = home.querySelector<HTMLElement>('[data-pager]')
+    const prev = home.querySelector<HTMLButtonElement>('[data-prev]')
+    const next = home.querySelector<HTMLButtonElement>('[data-next]')
+    const count = home.querySelector<HTMLElement>('[data-count]')
+    if (pager && prev && next && count && multi) {
+      const pages = pager.children.length
+      const pageWidth = () => (pager.firstElementChild as HTMLElement).getBoundingClientRect().width
+      const current = () => Math.round(pager.scrollLeft / (pageWidth() + parseFloat(getComputedStyle(pager.children[1] as HTMLElement).marginLeft || '0')))
+      const update = () => {
+        const c = Math.min(pages - 1, Math.max(0, current()))
+        prev.disabled = c === 0
+        next.disabled = c === pages - 1
+        count.textContent = `${c + 1} / ${pages}`
+      }
+      const go = (dir: number) => {
+        const target = pager.children[Math.min(pages - 1, Math.max(0, current() + dir))] as HTMLElement
+        pager.scrollTo({left: target.offsetLeft, behavior: 'smooth'})
+        // sur mobile, si on est descendu dans la liste, on remonte en haut des films
+        const bar = home.querySelector<HTMLElement>('.toolbar')
+        if (bar && bar.getBoundingClientRect().top < 0) {
+          window.scrollTo({top: window.scrollY + bar.getBoundingClientRect().top - 16, behavior: 'smooth'})
+        }
+      }
+      prev.addEventListener('click', () => go(-1))
+      next.addEventListener('click', () => go(1))
+      pager.addEventListener('scroll', () => requestAnimationFrame(update), {passive: true})
+      window.addEventListener('resize', update)
+      document.addEventListener('keydown', (e) => {
+        if (home.dataset.view !== 'apercu') return
+        if (e.key === 'ArrowRight') go(1)
+        if (e.key === 'ArrowLeft') go(-1)
+      })
+      update()
+    }
+  }
+</script>
