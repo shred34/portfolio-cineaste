@@ -14,3 +14,8 @@ dist/
 
 # ancien dépôt git du Studio (mis de côté)
 _ancien-git-studio/
+
+# fichiers personnels (mots de passe, clés) : ne jamais envoyer sur GitHub
+MDP*
+*mot de passe*
+*.key
