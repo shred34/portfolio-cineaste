@@ -114,18 +114,63 @@ export function srcSet(img: SanityImage | undefined, ratio?: number, widths = [4
     .join(', ')
 }
 
-/** Extrait l'identifiant d'une vidéo YouTube depuis n'importe quel format de lien. */
-export function youtubeId(url?: string): string | undefined {
-  if (!url) return undefined
+export type Video =
+  | {kind: 'embed'; src: string; provider: 'youtube' | 'vimeo'}
+  | {kind: 'file'; src: string}
+  | {kind: 'link'; src: string}
+
+/**
+ * Transforme le lien vidéo collé dans Sanity en lecteur :
+ * - YouTube et Vimeo : lecteur intégré épuré, chargé seulement au clic ;
+ * - fichier vidéo direct (.mp4, .webm, .mov) : lecteur natif du navigateur ;
+ * - tout autre lien : l'image ouvre la vidéo dans un nouvel onglet.
+ */
+export function videoFromUrl(url?: string): Video | undefined {
+  if (!url || !url.trim()) return undefined
+  let u: URL
   try {
-    const u = new URL(url.trim())
-    if (u.hostname.includes('youtu.be')) return u.pathname.split('/')[1] || undefined
-    if (u.searchParams.get('v')) return u.searchParams.get('v') || undefined
-    const m = u.pathname.match(/\/(embed|shorts|live)\/([^/?#]+)/)
-    return m?.[2]
+    u = new URL(url.trim())
   } catch {
     return undefined
   }
+  const host = u.hostname.replace(/^www\./, '')
+
+  // YouTube
+  if (host === 'youtu.be' || host.endsWith('youtube.com') || host.endsWith('youtube-nocookie.com')) {
+    let id: string | undefined
+    if (host === 'youtu.be') id = u.pathname.split('/')[1]
+    else id = u.searchParams.get('v') || u.pathname.match(/\/(embed|shorts|live)\/([^/?#]+)/)?.[2]
+    if (id) {
+      const params = new URLSearchParams({
+        autoplay: '1',
+        rel: '0',
+        modestbranding: '1',
+        playsinline: '1',
+        iv_load_policy: '3',
+        color: 'white',
+      })
+      return {kind: 'embed', provider: 'youtube', src: `https://www.youtube-nocookie.com/embed/${id}?${params}`}
+    }
+  }
+
+  // Vimeo (y compris les liens privés du type vimeo.com/123456/abcdef)
+  if (host.endsWith('vimeo.com')) {
+    const parts = u.pathname.split('/').filter(Boolean)
+    const i = parts.findIndex((x) => /^\d+$/.test(x))
+    if (i >= 0) {
+      const id = parts[i]
+      const hash = u.searchParams.get('h') || (parts[i + 1] && /^[0-9a-f]+$/i.test(parts[i + 1]) ? parts[i + 1] : '')
+      const params = new URLSearchParams({autoplay: '1', title: '0', byline: '0', portrait: '0', dnt: '1', color: 'ffffff'})
+      if (hash) params.set('h', hash)
+      return {kind: 'embed', provider: 'vimeo', src: `https://player.vimeo.com/video/${id}?${params}`}
+    }
+  }
+
+  // Fichier vidéo direct
+  if (/\.(mp4|webm|mov|m4v)$/i.test(u.pathname)) return {kind: 'file', src: u.toString()}
+
+  // Autre plateforme : on ouvre simplement le lien
+  return {kind: 'link', src: u.toString()}
 }
 
 export function filmMeta(f: Film, withYear = true) {

@@ -104,8 +104,9 @@ export default defineType({
     }),
     defineField({
       name: 'youtubeUrl',
-      title: 'Lien YouTube',
-      description: 'Colle simplement le lien de la vidéo (youtu.be/… ou youtube.com/watch?v=…). Laisse vide si pas encore en ligne.',
+      title: 'Lien de la vidéo',
+      description:
+        'Colle le lien YouTube ou Vimeo (même privé) : la vidéo se lit directement sur le site. Un lien vers un fichier .mp4 marche aussi. Tout autre lien ouvre la vidéo dans un nouvel onglet. Laisse vide si pas encore en ligne.',
       type: 'url',
       group: 'images',
     }),
