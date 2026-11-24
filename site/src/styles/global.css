@@ -4,11 +4,11 @@
   --white: #fff;
   --grey: #808080;
   --m: clamp(20px, 6.95vw, 120px); /* marge latérale (120px sur un écran de 1728px) */
-  --gap: clamp(14px, 1.4vw, 24px);
+  --gap: clamp(8px, 0.7vw, 12px); /* espace entre les vignettes */
   --fs-nav: clamp(17px, 1.22vw, 21px);
   --fs-small: clamp(13px, 0.87vw, 15px);
   --fs-tiny: 14px;
-  --ratio: 2.39 / 1; /* format cinémascope des vignettes */
+  --ratio: 16 / 9; /* format des vignettes */
 }
 
 *,
@@ -152,8 +152,8 @@ ul {
   gap: 16px;
   padding-top: clamp(56px, 6vw, 96px);
   padding-bottom: clamp(22px, 3vw, 52px);
-  font-size: var(--fs-tiny);
-  color: var(--grey);
+  font-size: clamp(15px, 0.98vw, 17px);
+  color: #555;
 }
 
 @media (max-width: 640px) {
@@ -179,79 +179,30 @@ ul {
   margin-left: auto;
 }
 
-.arrows {
-  display: flex;
-  align-items: baseline;
-  gap: 18px;
-  color: var(--black);
-}
-
-.arrows[hidden] {
-  display: none;
-}
-
-.arrows button {
-  font-size: 1em;
-  line-height: 1;
-  padding: 4px 2px;
-}
-
-.arrows button:disabled {
-  color: #c4c4c4;
-  cursor: default;
-}
-
-.arrows__count {
-  color: var(--grey);
-  font-variant-numeric: tabular-nums;
-  min-width: 3.5em;
-}
-
 /* les deux vues */
 [data-view='index'] .view-apercu,
 [data-view='apercu'] .view-index {
   display: none;
 }
 
-/* ——— Aperçu : pages de 6 films défilant horizontalement ——— */
-.pager {
-  position: relative;
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-}
-
-.pager::-webkit-scrollbar {
-  display: none;
-}
-
-.pager__page {
-  flex: 0 0 100%;
-  scroll-snap-align: start;
+/* ——— Aperçu : tous les films à la suite, 3 par ligne ——— */
+.grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   column-gap: var(--gap);
-  row-gap: clamp(32px, 3.25vw, 56px);
-  align-content: start;
-}
-
-.pager__page + .pager__page {
-  margin-left: var(--gap);
+  row-gap: clamp(22px, 2vw, 34px);
 }
 
 @media (max-width: 1000px) {
-  .pager__page {
+  .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
-  .pager__page {
+  .grid {
     grid-template-columns: minmax(0, 1fr);
-    row-gap: 28px;
+    row-gap: 24px;
   }
 }
 
@@ -296,7 +247,7 @@ ul {
   display: flex;
   align-items: baseline;
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 10px;
   font-size: var(--fs-nav);
 }
 
