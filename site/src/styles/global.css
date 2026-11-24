@@ -3,8 +3,8 @@
   --black: #000;
   --white: #fff;
   --grey: #808080;
-  --m: clamp(20px, 6.95vw, 120px); /* marge latérale (120px sur un écran de 1728px) */
-  --gap: clamp(8px, 0.7vw, 12px); /* espace entre les vignettes */
+  --gap: clamp(10px, 1.16vw, 20px); /* espace entre les vignettes */
+  --m: var(--gap); /* marge sur les bords = espace entre les vignettes */
   --fs-nav: clamp(17px, 1.22vw, 21px);
   --fs-small: clamp(13px, 0.87vw, 15px);
   --fs-tiny: 14px;
@@ -166,9 +166,8 @@ ul {
 /* ——— Accueil : barre Aperçu / Index ——— */
 .toolbar {
   display: flex;
-  justify-content: space-between;
   align-items: baseline;
-  margin-top: clamp(40px, 7.4vw, 128px);
+  margin-top: clamp(28px, 4vw, 72px);
   margin-bottom: clamp(24px, 3.2vw, 48px);
   font-size: clamp(15px, 0.98vw, 17px);
 }
@@ -176,7 +175,6 @@ ul {
 .toolbar__views {
   display: flex;
   gap: 34px;
-  margin-left: auto;
 }
 
 /* les deux vues */
